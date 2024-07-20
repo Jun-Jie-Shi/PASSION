@@ -100,4 +100,10 @@ You can conduct the experiment as following if everything is ready.
 cd ./code
 python train.py --use_passion
 ```
-and `eval.py` is simply implemented, just change the corresponding checkpoint path `resume` as you want.
+
+For evaluation, the `eval.py` is simply implemented, just change the corresponding checkpoint path `resume` and other path settings.
+
+Some bash scripts in `code/scripts` folder may be also useful.
+
+## Acknowledgement
+The implementation is based on the repos: [RFNet](https://github.com/dyh127/RFNet), [mmFormer](https://github.com/YaoZhang93/mmFormer), [RedCore](https://github.com/sunjunaimer/RedCore), we'd like to express our gratitude to these open-source works.
