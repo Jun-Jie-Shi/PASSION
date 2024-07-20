@@ -21,7 +21,7 @@ Incomplete multi-modal image segmentation is a fundamental task in medical imagi
 <img src="assets/overview.png" />
 </div>
 
-## Reqirements
+## Requirements
 We recommend using conda to setup the environment. See the `requirements.txt` for environment configuration.
 
 All our experiments are implemented based on the PyTorch framework with one 24G NVIDIA Geforce RTX 3090 GPU, and we recommend installing the following package versions:
