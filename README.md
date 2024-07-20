@@ -60,7 +60,27 @@ PASSION/
 └── ...
 ```
 you can simply conduct the preprocessing as following:
-```
+``` python
 python code/preprocessing/preprocess_brats.py
-
+python code/preprocessing/data_split.py
+python code/preprocessing/generate_imb_mr.py
+```
+After preprocessing your folder structure is assumed to be:
+```
+PASSION/
+├── datasets
+│   ├── BraTS
+│   │   ├── BRATS2020_Training_Data
+│   │   │   ├── ...
+│   │   ├── BRATS2020_Training_none_npy
+│   │   │   ├── seg
+│   │   │   ├── vol
+│   │   │   ├── test.txt
+│   │   │   ├── train.txt
+│   │   │   ├── val.txt
+│   │   ├── brats_split
+│   │   │   ├── Brats2020_imb_split_mr2468.csv
+├── code
+│   ├── ...
+└── ...
 ```
