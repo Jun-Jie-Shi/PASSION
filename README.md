@@ -38,12 +38,14 @@ pip install -r requirements.txt
 ```
 
 ## Datasets Preparation
+### Directly download preprocessed dataset
 You can download the preprocessed dataset (like BraTS2020) from [RFNet](https://drive.google.com/drive/folders/1AwLwGgEBQwesIDTlWpubbwqxxd8brt5A?usp=sharing) and unzip them in the `datasets/BraTS` folder.
 ```bash
   tar -xzf BRATS2020_Training_none_npy.tar.gz
 ```
 The data-split is available in the `datasets/BraTS/BRATS2020_Training_none_npy` folder, and our imbalanced missing rates data-split is available in the `datasets/BraTS/brats_split` folder.
 
+### Or Preprocessing by yourself
 If you want to preprocess by yourself, the preprocessing code `code/preprocessing/preprocess_brats.py` is also provided, just download BRATS2020 in `datasets/BraTS/BRATS2020_Training_Data` folder.
 
 And if you want to divide data by yourself, `data_split.py` and `generate_imb_mr.py` in the `code/preprocessing` folder is available. (Here we only provide the preprocessing for BraTS, if you want to use other datasets, just do it similarly)
