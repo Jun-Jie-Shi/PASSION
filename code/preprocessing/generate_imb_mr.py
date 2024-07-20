@@ -11,7 +11,9 @@ datarootPath = os.path.abspath(os.path.join(currentdirPath,relativePath))
 ## Note: or directly set datarootPath as your data-saving path (absolute root)
 train_path = os.path.join(datarootPath, 'BraTS/BRATS2020_Training_none_npy')
 train_file = os.path.join(train_path, 'train.txt')
-csv_name = os.path.join(datarootPath, 'BraTS/brats_split/Brats2020_imb_split_mr2468.csv')
+split_path = os.path.join(datarootPath, 'BraTS/brats_split')
+os.makedirs(split_path, exist_ok=True)
+csv_name = os.path.join(split_path, 'Brats2020_imb_split_mr2468.csv')
 
 p=[0.2, 0.4, 0.6, 0.8]
 
