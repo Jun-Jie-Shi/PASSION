@@ -1,5 +1,5 @@
 #!/bin/bash
-pythonname='/home/sjj/miniconda3/envs/pytorch' ## your env-path
+pythonname='/home/sjj/miniconda3/envs/passion' ## your env-path
 
 dataname='BraTS/BRATS2020'
 pypath=$pythonname
