@@ -88,4 +88,16 @@ PASSION/
 ```
 
 ## Options Setting
-Before start training, you should check the options in `code/options.py`,  especially for datasets path, our default relative datapath is according to our folder structure, if your datapath is different, just change `datarootPath` and `datasetPath` as your absolute data-saving root-path and dataset-saving path. 
+Before start training, you should check the options in `code/options.py`,  especially for datasets path. Our code-notes may help you.
+
+Our default relative datapath is according to our folder structure, if your datapath is different, just change `datarootPath` and `datasetPath` as your absolute data-saving root-path and dataset-saving path. 
+
+Other path setting like `imbmrpath` and `savepath` is also noteworthy.
+
+## Running
+You can conduct the experiment as following if everything is ready.
+```
+cd ./code
+python train.py --use_passion
+```
+and `eval.py` is simply implemented, just change the corresponding checkpoint path `resume` as you want.
