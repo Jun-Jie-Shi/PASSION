@@ -37,3 +37,9 @@ conda activate passion
 pip install -r requirements.txt
 ```
 
+## Datasets Preparation
+You can download the preprocessed dataset (like BraTS2020) from [RFNet](https://drive.google.com/drive/folders/1AwLwGgEBQwesIDTlWpubbwqxxd8brt5A?usp=sharing) and unzip them in the `datasets/BraTS` folder.
+```bash
+  tar -xzf BRATS2020_Training_none_npy.tar.gz
+```
+The data-split is available in the `datasets/BraTS/BRATS2020_Training_none_npy` folder, and the imbalanced missing rates data-split is available in the `datasets/BraTS/brats_split` folder.
