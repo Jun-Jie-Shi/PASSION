@@ -1,0 +1,220 @@
+data_name,mask_id,mask,pos_mask_ids
+HG_BraTS20_Training_002,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_003,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_004,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_006,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_007,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_008,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_009,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_010,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_011,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_012,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_013,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_014,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_015,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_020,14,"[True, True, True, True]","[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+HG_BraTS20_Training_021,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_022,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_024,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_025,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_026,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_027,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_028,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_029,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_031,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_033,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_034,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_035,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_037,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_038,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_039,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_040,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_041,13,"[False, True, True, True]","[0, 1, 2, 4, 5, 7, 13]"
+HG_BraTS20_Training_042,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_043,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_045,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_046,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_048,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_049,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_053,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_054,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_055,14,"[True, True, True, True]","[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+HG_BraTS20_Training_057,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_058,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_059,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_060,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_062,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_064,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_067,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_071,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_073,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_074,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_075,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_076,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_079,5,"[False, True, True, False]","[1, 2, 5]"
+HG_BraTS20_Training_080,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_081,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_083,2,"[False, False, True, False]",[2]
+HG_BraTS20_Training_084,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_085,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_088,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_089,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_090,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_093,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_095,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_096,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_101,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_103,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_105,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_106,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_108,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_109,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_110,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_115,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_116,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_117,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_119,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_122,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_125,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_127,7,"[False, False, True, True]","[0, 2, 7]"
+HG_BraTS20_Training_128,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_129,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_131,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_135,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_136,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_140,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_141,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_142,1,"[False, True, False, False]",[1]
+HG_BraTS20_Training_143,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_146,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_150,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_157,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_158,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_159,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_161,10,"[True, True, True, False]","[1, 2, 3, 5, 6, 9, 10]"
+HG_BraTS20_Training_163,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_166,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_167,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_168,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_169,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_170,7,"[False, False, True, True]","[0, 2, 7]"
+HG_BraTS20_Training_171,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_172,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_173,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_177,4,"[False, True, False, True]","[0, 1, 4]"
+HG_BraTS20_Training_178,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_180,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_182,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_183,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_184,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_185,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_186,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_187,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_191,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_193,1,"[False, True, False, False]",[1]
+HG_BraTS20_Training_194,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_196,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_197,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_199,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_200,4,"[False, True, False, True]","[0, 1, 4]"
+HG_BraTS20_Training_201,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_202,14,"[True, True, True, True]","[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+HG_BraTS20_Training_204,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_205,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_207,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_209,2,"[False, False, True, False]",[2]
+HG_BraTS20_Training_210,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_211,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_214,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_215,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_217,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_218,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_219,2,"[False, False, True, False]",[2]
+HG_BraTS20_Training_220,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_223,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_226,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_227,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_231,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_232,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_233,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_234,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_235,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_239,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_240,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_241,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_242,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_243,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_244,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_246,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_248,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_250,1,"[False, True, False, False]",[1]
+HG_BraTS20_Training_251,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_252,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_253,6,"[True, False, True, False]","[2, 3, 6]"
+HG_BraTS20_Training_254,14,"[True, True, True, True]","[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+HG_BraTS20_Training_255,2,"[False, False, True, False]",[2]
+HG_BraTS20_Training_256,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_257,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_258,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_259,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_336,7,"[False, False, True, True]","[0, 2, 7]"
+HG_BraTS20_Training_337,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_338,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_339,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_340,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_344,0,"[False, False, False, True]",[0]
+HG_BraTS20_Training_346,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_347,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_350,9,"[True, True, False, False]","[1, 3, 9]"
+HG_BraTS20_Training_351,10,"[True, True, True, False]","[1, 2, 3, 5, 6, 9, 10]"
+HG_BraTS20_Training_355,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_356,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_358,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+HG_BraTS20_Training_359,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+HG_BraTS20_Training_360,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_361,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_363,3,"[True, False, False, False]",[3]
+HG_BraTS20_Training_368,8,"[True, False, False, True]","[0, 3, 8]"
+HG_BraTS20_Training_369,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+LG_BraTS20_Training_260,7,"[False, False, True, True]","[0, 2, 7]"
+LG_BraTS20_Training_261,10,"[True, True, True, False]","[1, 2, 3, 5, 6, 9, 10]"
+LG_BraTS20_Training_264,9,"[True, True, False, False]","[1, 3, 9]"
+LG_BraTS20_Training_267,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_269,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_273,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+LG_BraTS20_Training_274,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_275,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_276,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_278,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_280,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_282,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_284,6,"[True, False, True, False]","[2, 3, 6]"
+LG_BraTS20_Training_286,12,"[True, True, False, True]","[0, 1, 3, 4, 8, 9, 12]"
+LG_BraTS20_Training_289,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_290,6,"[True, False, True, False]","[2, 3, 6]"
+LG_BraTS20_Training_291,9,"[True, True, False, False]","[1, 3, 9]"
+LG_BraTS20_Training_292,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_294,0,"[False, False, False, True]",[0]
+LG_BraTS20_Training_296,11,"[True, False, True, True]","[0, 2, 3, 6, 7, 8, 11]"
+LG_BraTS20_Training_297,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_298,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_301,6,"[True, False, True, False]","[2, 3, 6]"
+LG_BraTS20_Training_302,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_304,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_307,6,"[True, False, True, False]","[2, 3, 6]"
+LG_BraTS20_Training_308,0,"[False, False, False, True]",[0]
+LG_BraTS20_Training_312,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_314,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_315,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_316,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_317,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_318,4,"[False, True, False, True]","[0, 1, 4]"
+LG_BraTS20_Training_321,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_323,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_324,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_325,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_326,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_327,3,"[True, False, False, False]",[3]
+LG_BraTS20_Training_328,8,"[True, False, False, True]","[0, 3, 8]"
+LG_BraTS20_Training_333,0,"[False, False, False, True]",[0]
+LG_BraTS20_Training_334,3,"[True, False, False, False]",[3]
