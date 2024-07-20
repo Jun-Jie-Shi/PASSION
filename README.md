@@ -44,6 +44,23 @@ You can download the preprocessed dataset (like BraTS2020) from [RFNet](https://
 ```
 The data-split is available in the `datasets/BraTS/BRATS2020_Training_none_npy` folder, and our imbalanced missing rates data-split is available in the `datasets/BraTS/brats_split` folder.
 
-If you want to preprocess by yourself, the preprocessing code `code/preprocessing/preprocess_brats.py` is also provided.
+If you want to preprocess by yourself, the preprocessing code `code/preprocessing/preprocess_brats.py` is also provided, just download BRATS2020 in `datasets/BraTS/BRATS2020_Training_Data` folder.
 
-And if you want to divide data by yourself, `data_split.py` and `generate_imb_mr.py` in the `code/preprocessing` folder is also available. (Here we only provide the preprocessing for BraTS, if you want to use other datasets, just do it similarly)
+And if you want to divide data by yourself, `data_split.py` and `generate_imb_mr.py` in the `code/preprocessing` folder is available. (Here we only provide the preprocessing for BraTS, if you want to use other datasets, just do it similarly)
+
+If your folder structure (especially for datasets path) is as follows:
+```
+PASSION/
+├── datasets
+│   ├── BraTS
+│   │   ├── BRATS2020_Training_Data
+│   │   │   ├── ...
+├── code
+│   ├── ...
+└── ...
+```
+you can simply conduct the preprocessing as following:
+```
+python code/preprocessing/preprocess_brats.py
+
+```
