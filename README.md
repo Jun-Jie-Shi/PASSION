@@ -67,7 +67,7 @@ python code/preprocessing/preprocess_brats.py
 python code/preprocessing/data_split.py
 python code/preprocessing/generate_imb_mr.py
 ```
-After preprocessing your folder structure is assumed to be:
+After preprocessing, your folder structure is assumed to be:
 ```
 PASSION/
 ├── datasets
@@ -86,3 +86,6 @@ PASSION/
 │   ├── ...
 └── ...
 ```
+
+## Options Setting
+Before start training, you should check the options in `code/options.py`,  especially for datasets path, our default relative datapath is according to our folder structure, if your datapath is different, just change `datarootPath` and `datasetPath` as your absolute data-saving root-path and dataset-saving path. 
