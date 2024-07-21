@@ -1,4 +1,3 @@
-![image](https://github.com/user-attachments/assets/4b880e58-ae66-4101-92cc-8c006f6c9573)
 <div align="center">
 <h1> 🔥PASSION [ACM MM'24 Oral]🎉 </h1>
 <h3>PASSION:Towards Effective Incomplete Multi-Modal Medical Image Segmentation <br> with Imbalanced Missing Rates</h3>
