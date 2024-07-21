@@ -104,7 +104,7 @@ Our default relative datapath is according to our folder structure, if your data
 
 Other path setting like `imbmrpath` and `savepath` is also noteworthy.
 
-## Running
+## 🚀Running
 You can conduct the experiment as following if everything is ready.
 ```
 cd ./code
