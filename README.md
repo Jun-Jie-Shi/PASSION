@@ -9,19 +9,25 @@
 <br> ArXiv Preprint ()
 </div>
 
-## Abstract
+
+## Overview
+<details>
+  
+### • Abstract
 Incomplete multi-modal image segmentation is a fundamental task in medical imaging to refine deployment efficiency when only partial modalities are available. However, the common practice that complete-modality data is visible during model training is far from realistic, as modalities can have imbalanced missing rates in clinical scenarios. In this paper, we, for the first time, formulate such a challenging setting and propose Preference-Aware Self-diStillatION (PASSION) for incomplete multi-modal medical image segmentation under imbalanced missing rates. Specifically, we first construct pixel-wise and semantic-wise self-distillation to balance the optimization objective of each modality. Then, we define relative preference to evaluate the dominance of each modality during training, based on which to design task-wise and gradient-wise regularization to balance the convergence rates of different modalities. Experimental results on two publicly available multi-modal datasets demonstrate the superiority of PASSION against existing approaches for modality balancing. More importantly, PASSION is validated to work as a plug-and-play module for consistent performance improvement across different backbones.
 
 <div align="center">
 <img src="assets/settings.png" />
 </div>
 
-## Overview
+### • Framework
 <div align="center">
 <img src="assets/overview.png" />
 </div>
 
-## Requirements
+</details>
+
+## 📋️Requirements
 We recommend using conda to setup the environment. See the `requirements.txt` for environment configuration.
 
 All our experiments are implemented based on the PyTorch framework with one 24G NVIDIA Geforce RTX 3090 GPU, and we recommend installing the following package versions:
