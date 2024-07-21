@@ -1,4 +1,4 @@
-
+![image](https://github.com/user-attachments/assets/4b880e58-ae66-4101-92cc-8c006f6c9573)
 <div align="center">
 <h1> 🔥PASSION [ACM MM'24 Oral]🎉 </h1>
 <h3>PASSION:Towards Effective Incomplete Multi-Modal Medical Image Segmentation <br> with Imbalanced Missing Rates</h3>
@@ -42,6 +42,8 @@ All our experiments are implemented based on the PyTorch framework with one 24G 
 Dependency packages can be installed using following command:
 
 ```bash
+git clone https://github.com/Jun-Jie-Shi/PASSION.git
+cd PASSION
 conda create --name passion python=3.8
 conda activate passion
 pip install -r requirements.txt
