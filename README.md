@@ -6,8 +6,9 @@
 [Junjie Shi](https://github.com/Jun-Jie-Shi)<sup>1</sup> ,[Caozhi Shang](https://github.com/Shangcz1015)<sup>1</sup> ,[Zhaobin Sun](https://github.com/szbonaldo)<sup>1</sup> ,[Li Yu](https://eic.hust.edu.cn/professor/yuli/)<sup>1</sup> ,[Xin Yang](https://sites.google.com/view/xinyang/home)<sup>1</sup> ,[Zengqiang Yan](https://mia2i.github.io/home/)<sup>1 :email:</sup>
 
 <sup>1</sup>  Huazhong University of Science and Technology, (<sup>:email:</sup>) corresponding author.
-<br> [ArXiv]() | [OpenReview](https://openreview.net/forum?id=jttrL7wHLC)
+<br> 🧐  [ArXiv]() | [OpenReview](https://openreview.net/forum?id=jttrL7wHLC)
 </div>
+
 
 ### News
 * **` Jul. 21th, 2024`:** Our work is further selected as an Oral presentation (3.97% in total 4385 submissions), [OpenReview](https://openreview.net/forum?id=jttrL7wHLC) is open to public.
