@@ -97,7 +97,7 @@ PASSION/
 └── ...
 ```
 
-## Options Setting
+## 🔧Options Setting
 Before start training, you should check the options in `code/options.py`,  especially for datasets path. Our code-notes may help you.
 
 Our default relative datapath is according to our folder structure, if your datapath is different, just change `datarootPath` and `datasetPath` as your absolute data-saving root-path and dataset-saving path. 
