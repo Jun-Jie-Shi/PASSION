@@ -47,7 +47,7 @@ conda activate passion
 pip install -r requirements.txt
 ```
 
-## Datasets Preparation
+## 📊Datasets Preparation
 ### Directly download preprocessed dataset
 You can download the preprocessed dataset (e.g. BraTS2020) from [RFNet](https://drive.google.com/drive/folders/1AwLwGgEBQwesIDTlWpubbwqxxd8brt5A?usp=sharing) and unzip them in the `datasets/BraTS` folder.
 ```bash
