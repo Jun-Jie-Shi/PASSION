@@ -38,7 +38,7 @@ def args_parser():
     datarootPath = os.path.abspath(os.path.join(currentdirPath,relativePath))
     #### Note: or directly set datarootPath as your data-saving path (absolute root):
     # datarootPath = 'your data-saving path (root)'
-    datarootPath = '/home/sjj/MMMSeg'
+    # datarootPath = '/home/sjj/PASSION/datasets'
 
     args = parser.parse_args()
 
