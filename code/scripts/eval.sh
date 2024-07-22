@@ -3,7 +3,7 @@ pythonname='/home/sjj/miniconda3/envs/passion' ## your env-path
 
 dataname='BraTS/BRATS2020'
 pypath=$pythonname
-cudapath='/home/sjj/anaconda3' ## your cuda-path
+cudapath='/home/sjj/miniconda3' ## your cuda-path
 datapath=${dataname}_Training_none_npy
 savepath='outputs/eval_mmformer'
 resume='your pretrained model path'
