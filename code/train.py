@@ -406,10 +406,8 @@ def main():
                         x_bs = x[bs:bs+1]
                         mask_bs = mask[bs:bs+1]
                         target_bs = target[bs:bs+1]
-                        # print(x_bs.size())
 
                         fuse_pred_bs, sep_preds_bs, prm_preds_bs = model(x_bs, mask_bs)
-                        # print(x_bs.size())
 
                         ###Loss compute
                         fuse_cross_loss = criterions.softmax_weighted_loss(fuse_pred_bs, target_bs, num_cls=num_cls)
