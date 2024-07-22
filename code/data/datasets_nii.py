@@ -92,7 +92,7 @@ class Brats_loadall_train_nii_pdt(Dataset):
         return len(self.volpaths)
 
 class Brats_loadall_train_nii_idt(Dataset):
-    def __init__(self, transforms='', root=None, modal='all', num_cls=4, mask_type='idt', train_file='/home/sjj/MMMSeg/LongTail/data/Brats2020_longtail_split.csv'):
+    def __init__(self, transforms='', root=None, modal='all', num_cls=4, mask_type='idt', train_file=None):
         self.excel_path = train_file
         excel_data = pd.read_csv(self.excel_path)
         data_name = excel_data['data_name']
