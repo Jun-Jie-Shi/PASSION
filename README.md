@@ -11,7 +11,7 @@
 
 ## 📅News
 * **` Jul. 21th, 2024`:** Our work is further selected as an Oral presentation (3.97% in total 4385 submissions), [OpenReview](https://openreview.net/forum?id=jttrL7wHLC) is open to public.
-* **` Jul. 20th, 2024`:** We released our code and submitted our paper on ArXiv.
+* **` Jul. 20th, 2024`:** We released our code and submitted our paper on [ArXiv](https://arxiv.org/abs/2407.14796).
 
 ## 👇Overview
 <details>
