@@ -105,6 +105,8 @@ Our default relative datapath is according to our folder structure, if your data
 
 Other path setting like `imbmrpath` and `savepath` is also noteworthy.
 
+😭😭😭 We apologize for not fully implementing multi-batch parallel training, here we used 'for' loops but seems not memory-friendly, we will subsequently consider how to implement efficiently. If you have a better way, by all means contact me!
+
 ## 🚀Running
 You can conduct the experiment as following if everything is ready.
 ```
