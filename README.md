@@ -120,3 +120,14 @@ Some bash scripts in `code/scripts` folder may be useful.
 
 ## 📑Acknowledgement
 The implementation is based on the repos: [RFNet](https://github.com/dyh127/RFNet), [mmFormer](https://github.com/YaoZhang93/mmFormer), [RedCore](https://github.com/sunjunaimer/RedCore), we'd like to express our gratitude to these open-source works.
+
+## ✨Citation
+If you find PASSION is useful in your research or applications, please consider giving us a star 🌟 and citing it by the following BibTeX entry.
+```bibtex
+ @article{passion,
+  title={PASSION: Towards Effective Incomplete Multi-Modal Medical Image Segmentation with Imbalanced Missing Rates},
+  author={Junjie Shi and Caozhi Shang and Zhaobin Sun and Li Yu and Xin Yang and Zengqiang Yan},
+  journal={arXiv preprint arXiv:2407.14796},
+  year={2024}
+}
+```
