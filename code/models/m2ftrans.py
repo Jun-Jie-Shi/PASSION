@@ -1,21 +1,22 @@
 import math
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.blocks import (general_conv3d, normalization, prm_generator, prm_fusion,
+from models.blocks import (general_conv3d, normalization, prm_generator, prm_fusion_pk,
                     prm_generator_laststage, region_aware_modal_fusion, fusion_postnorm)
 from models.blocks import nchwd2nlc2nchwd, DepthWiseConvBlock, ResBlock, GroupConvBlock, MultiMaskAttentionLayer, MultiMaskCrossBlock
 from torch.nn.init import constant_, xavier_uniform_
 from models.mask import mask_gen_fusion
+from utils.criterions import temp_kl_loss_bs, softmax_weighted_loss_bs, dice_loss_bs, prototype_passion_loss_bs
 
-# from visualizer import get_local
 
 basic_dims = 8
 transformer_basic_dims = 512
 mlp_dim = 4096
 num_heads = 8
 depth = 3
+num_cls = 4
 num_modals = 4
 patch_size = 5
 HWD = 80
@@ -182,12 +183,12 @@ class Decoder_fusion(nn.Module):
         self.d1_out = general_conv3d(basic_dims, basic_dims, k_size=1, padding=0, pad_type='reflect')
 
         self.seg_layer = nn.Conv3d(in_channels=basic_dims, out_channels=num_cls, kernel_size=1, stride=1, padding=0, bias=True)
-        self.softmax = nn.Softmax(dim=1)
+        # self.softmax = nn.Softmax(dim=1)
 
         self.up2 = nn.Upsample(scale_factor=2, mode='trilinear', align_corners=True)
-        self.up4 = nn.Upsample(scale_factor=4, mode='trilinear', align_corners=True)
-        self.up8 = nn.Upsample(scale_factor=8, mode='trilinear', align_corners=True)
-        self.up16 = nn.Upsample(scale_factor=16, mode='trilinear', align_corners=True)
+        # self.up4 = nn.Upsample(scale_factor=4, mode='trilinear', align_corners=True)
+        # self.up8 = nn.Upsample(scale_factor=8, mode='trilinear', align_corners=True)
+        # self.up16 = nn.Upsample(scale_factor=16, mode='trilinear', align_corners=True)
 
         # self.RFM5 = fusion_postnorm(in_channel=basic_dims*16, num_cls=num_cls)
         # self.RFM4 = fusion_postnorm(in_channel=basic_dims*8, num_cls=num_cls)
@@ -195,11 +196,11 @@ class Decoder_fusion(nn.Module):
         self.RFM2 = fusion_postnorm(in_channel=basic_dims*2, num_cls=num_cls)
         self.RFM1 = fusion_postnorm(in_channel=basic_dims*1, num_cls=num_cls)
 
-        self.prm_fusion5 = prm_fusion(in_channel=basic_dims*16, num_cls=num_cls)
-        self.prm_fusion4 = prm_fusion(in_channel=basic_dims*8, num_cls=num_cls)
-        self.prm_fusion3 = prm_fusion(in_channel=basic_dims*4, num_cls=num_cls)
-        self.prm_fusion2 = prm_fusion(in_channel=basic_dims*2, num_cls=num_cls)
-        self.prm_fusion1 = prm_fusion(in_channel=basic_dims*1, num_cls=num_cls)
+        self.prm_fusion5 = prm_fusion_pk(in_channel=basic_dims*16, num_cls=num_cls)
+        self.prm_fusion4 = prm_fusion_pk(in_channel=basic_dims*8, num_cls=num_cls)
+        self.prm_fusion3 = prm_fusion_pk(in_channel=basic_dims*4, num_cls=num_cls)
+        self.prm_fusion2 = prm_fusion_pk(in_channel=basic_dims*2, num_cls=num_cls)
+        self.prm_fusion1 = prm_fusion_pk(in_channel=basic_dims*1, num_cls=num_cls)
 
 
     def forward(self, dx1, dx2, dx3, dx4, dx5, fusion, mask):
@@ -234,9 +235,10 @@ class Decoder_fusion(nn.Module):
         de_x1 = self.d1_out(self.d1_c2(de_x1))
 
         logits = self.seg_layer(de_x1)
-        pred = self.softmax(logits)
+        # pred = self.softmax(logits)
+        pred = logits
 
-        return pred, (prm_pred1, self.up2(prm_pred2), self.up4(prm_pred3), self.up8(prm_pred4), self.up16(prm_pred5))
+        return pred, (prm_pred1, prm_pred2, prm_pred3, prm_pred4, prm_pred5), (de_x1, de_x2, de_x3, de_x4, de_x5)
 
 
 
@@ -331,7 +333,6 @@ class MaskedAttention(nn.Module):
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(dropout_rate)
 
-    # @get_local('attn')
     def forward(self, x, mask):
         B, N, C = x.shape
         qkv = (
@@ -481,7 +482,6 @@ class Model(nn.Module):
         self.decoder_sep = Decoder_sep(num_cls=num_cls)
         self.weight_attention = Weight_Attention()
         self.masker = MaskModal()
-        self.mask_type = 'idt'
         self.zeros_x1 = torch.zeros(1,basic_dims,H,W,Z).detach()
         self.zeros_x2 = torch.zeros(1,basic_dims*2,H//2,W//2,Z//2).detach()
         self.zeros_x3 = torch.zeros(1,basic_dims*4,H//4,W//4,Z//4).detach()
@@ -491,13 +491,29 @@ class Model(nn.Module):
         self.pos = nn.Parameter(torch.zeros(1, (patch_size**3)*5, basic_dims*16))
         self.fusion = nn.Parameter(nn.init.normal_(torch.zeros(1, patch_size**3, basic_dims*16), mean=0.0, std=1.0))
 
+        self.masks_mod0 = torch.from_numpy(np.array([[True, False, False, False]])).detach()
+        self.masks_mod1 = torch.from_numpy(np.array([[False, True, False, False]])).detach()
+        self.masks_mod2 = torch.from_numpy(np.array([[False, False, True, False]])).detach()
+        self.masks_mod3 = torch.from_numpy(np.array([[False, False, False, True]])).detach()
+        
+        self.up1 = nn.Identity()        
+        self.up2 = nn.Upsample(scale_factor=2, mode='trilinear', align_corners=True)
+        self.up4 = nn.Upsample(scale_factor=4, mode='trilinear', align_corners=True)
+        self.up8 = nn.Upsample(scale_factor=8, mode='trilinear', align_corners=True)
+        self.up16 = nn.Upsample(scale_factor=16, mode='trilinear', align_corners=True)
+        self.up_ops = nn.ModuleList([self.up1, self.up2, self.up4, self.up8, self.up16])
+
+        self.mask_type = 'idt'
         self.is_training = False
+        self.use_passion = False
 
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
                 torch.nn.init.kaiming_normal_(m.weight) #
 
-    def forward(self, x, mask):
+    def forward(self, x, mask, target=None, temp=1.0):
+        B = x.size(0)
+        device = x.device
         #extract feature from different layers
         if self.mask_type == 'pdt':
             flair_x1, flair_x2, flair_x3, flair_x4, flair_x5 = self.flair_encoder(x[:, 0:1, :, :, :])
@@ -507,40 +523,47 @@ class Model(nn.Module):
         else:
             x = torch.unsqueeze(x, dim=2)
             x = self.masker(x, mask)
-            flair_x1, flair_x2, flair_x3, flair_x4, flair_x5 = self.flair_encoder(x[:, 0:1, :, :, :]) if mask[0,0] else (self.zeros_x1.cuda(), self.zeros_x2.cuda(), self.zeros_x3.cuda(), self.zeros_x4.cuda(), self.zeros_x5.cuda())
-            t1ce_x1, t1ce_x2, t1ce_x3, t1ce_x4, t1ce_x5 = self.t1ce_encoder(x[:, 1:2, :, :, :]) if mask[0,1] else (self.zeros_x1.cuda(), self.zeros_x2.cuda(), self.zeros_x3.cuda(), self.zeros_x4.cuda(), self.zeros_x5.cuda())
-            t1_x1, t1_x2, t1_x3, t1_x4, t1_x5 = self.t1_encoder(x[:, 2:3, :, :, :]) if mask[0,2] else (self.zeros_x1.cuda(), self.zeros_x2.cuda(), self.zeros_x3.cuda(), self.zeros_x4.cuda(), self.zeros_x5.cuda())
-            t2_x1, t2_x2, t2_x3, t2_x4, t2_x5 = self.t2_encoder(x[:, 3:4, :, :, :]) if mask[0,3] else (self.zeros_x1.cuda(), self.zeros_x2.cuda(), self.zeros_x3.cuda(), self.zeros_x4.cuda(), self.zeros_x5.cuda())
+            flair_x1, flair_x2, flair_x3, flair_x4, flair_x5 = self.flair_encoder(x[:, 0:1, :, :, :])
+            t1ce_x1, t1ce_x2, t1ce_x3, t1ce_x4, t1ce_x5 = self.t1ce_encoder(x[:, 1:2, :, :, :])
+            t1_x1, t1_x2, t1_x3, t1_x4, t1_x5 = self.t1_encoder(x[:, 2:3, :, :, :])
+            t2_x1, t2_x2, t2_x3, t2_x4, t2_x5 = self.t2_encoder(x[:, 3:4, :, :, :])
+
+            x1 = self.masker(torch.stack((flair_x1, t1ce_x1, t1_x1, t2_x1), dim=1), mask) #Bx4xCxHWZ
+            x2 = self.masker(torch.stack((flair_x2, t1ce_x2, t1_x2, t2_x2), dim=1), mask)
+            x3 = self.masker(torch.stack((flair_x3, t1ce_x3, t1_x3, t2_x3), dim=1), mask)
+            x4 = self.masker(torch.stack((flair_x4, t1ce_x4, t1_x4, t2_x4), dim=1), mask)
+            x5 = self.masker(torch.stack((flair_x5, t1ce_x5, t1_x5, t2_x5), dim=1), mask)
+
+            flair_x1, t1ce_x1, t1_x1, t2_x1 = torch.chunk(x1, num_modals, dim=1)
+            flair_x2, t1ce_x2, t1_x2, t2_x2 = torch.chunk(x2, num_modals, dim=1)
+            flair_x3, t1ce_x3, t1_x3, t2_x3 = torch.chunk(x3, num_modals, dim=1)
+            flair_x4, t1ce_x4, t1_x4, t2_x4 = torch.chunk(x4, num_modals, dim=1)
+            flair_x5, t1ce_x5, t1_x5, t2_x5 = torch.chunk(x5, num_modals, dim=1)
 
         x_bottle = (flair_x5, t1ce_x5, t1_x5, t2_x5)
 
-        B = x.size(0)
-        fusion = torch.tile(self.fusion, [B, 1, 1])
+        fusion = torch.tile(self.fusion, [B, 1, 1]).to(device)
 
         flair_trans, t1ce_trans, t1_trans, t2_trans, fusion_trans, attn = self.Bottleneck(x_bottle, mask, fusion, self.pos)
 
-        flair_tra = flair_trans.view(x.size(0), patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
-        t1ce_tra = t1ce_trans.view(x.size(0), patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
-        t1_tra = t1_trans.view(x.size(0), patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
-        t2_tra = t2_trans.view(x.size(0), patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
-        fusion_tra = fusion_trans.view(x.size(0), patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
-
+        flair_tra = flair_trans.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+        t1ce_tra = t1ce_trans.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+        t1_tra = t1_trans.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+        t2_tra = t2_trans.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+        fusion_tra = fusion_trans.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
         # x5_tra = torch.stack((flair_tra, t1ce_tra, t1_tra, t2_tra), dim=1)
-
-        de_x5 = (flair_tra, t1ce_tra, t1_tra, t2_tra)
+        de_x5_tra = (flair_tra, t1ce_tra, t1_tra, t2_tra)
         de_x4 = (flair_x4, t1ce_x4, t1_x4, t2_x4)
         de_x3 = (flair_x3, t1ce_x3, t1_x3, t2_x3)
         de_x2 = (flair_x2, t1ce_x2, t1_x2, t2_x2)
         de_x1 = (flair_x1, t1ce_x1, t1_x1, t2_x1)
 
-        de_x1, de_x2, de_x3, de_x4, de_x5 = self.weight_attention(de_x1, de_x2, de_x3, de_x4, de_x5, attn)
+        de_x1_w, de_x2_w, de_x3_w, de_x4_w, de_x5_w = self.weight_attention(de_x1, de_x2, de_x3, de_x4, de_x5_tra, attn)
+        de_x3_w = torch.stack(de_x3_w, dim=1)
+        de_x2_w = torch.stack(de_x2_w, dim=1)
+        de_x1_w = torch.stack(de_x1_w, dim=1)
 
-        de_x3 = torch.stack(de_x3, dim=1)
-        de_x2 = torch.stack(de_x2, dim=1)
-        de_x1 = torch.stack(de_x1, dim=1)
-
-
-        fuse_pred, prm_preds = self.decoder_fusion(de_x1, de_x2, de_x3, de_x4, de_x5, fusion_tra, mask)
+        fuse_pred, preds, de_f_avg = self.decoder_fusion(de_x1_w, de_x2_w, de_x3_w, de_x4_w, de_x5_w, fusion_tra, mask)
 
         if self.is_training:
             if self.mask_type == 'pdt':
@@ -549,9 +572,200 @@ class Model(nn.Module):
                 t1_pred = self.decoder_sep(t1_x1, t1_x2, t1_x3, t1_x4, t1_x5)
                 t2_pred = self.decoder_sep(t2_x1, t2_x2, t2_x3, t2_x4, t2_x5)
             else:
-                flair_pred = self.decoder_sep(flair_x1, flair_x2, flair_x3, flair_x4, flair_x5) if mask[0,0] else 0
-                t1ce_pred = self.decoder_sep(t1ce_x1, t1ce_x2, t1ce_x3, t1ce_x4, t1ce_x5) if mask[0,1] else 0
-                t1_pred = self.decoder_sep(t1_x1, t1_x2, t1_x3, t1_x4, t1_x5) if mask[0,2] else 0
-                t2_pred = self.decoder_sep(t2_x1, t2_x2, t2_x3, t2_x4, t2_x5) if mask[0,3] else 0
-            return fuse_pred, (flair_pred, t1ce_pred, t1_pred, t2_pred), prm_preds
-        return fuse_pred
+                flair_pred = self.decoder_sep(flair_x1, flair_x2, flair_x3, flair_x4, flair_x5)
+                t1ce_pred = self.decoder_sep(t1ce_x1, t1ce_x2, t1ce_x3, t1ce_x4, t1ce_x5)
+                t1_pred = self.decoder_sep(t1_x1, t1_x2, t1_x3, t1_x4, t1_x5)
+                t2_pred = self.decoder_sep(t2_x1, t2_x2, t2_x3, t2_x4, t2_x5)
+
+                sep_pred = self.masker(torch.stack((flair_pred, t1ce_pred, t1_pred, t2_pred), dim=1), mask)
+                flair_pred, t1ce_pred, t1_pred, t2_pred = torch.chunk(sep_pred, num_modals, dim=1)
+
+            masks_mod0 = torch.tile(self.masks_mod0, [B, 1]).to(device)
+            masks_mod1 = torch.tile(self.masks_mod1, [B, 1]).to(device)
+            masks_mod2 = torch.tile(self.masks_mod2, [B, 1]).to(device)
+            masks_mod3 = torch.tile(self.masks_mod3, [B, 1]).to(device) 
+
+            if self.use_passion:                                
+                ### Mod0-Flair-Path
+                flair_trans_flair, t1ce_trans_flair, t1_trans_flair, t2_trans_flair, fusion_trans_flair, attn_flair = self.Bottleneck(x_bottle, masks_mod0, fusion, self.pos)
+                flair_tra_flair = flair_trans_flair.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1ce_tra_flair = t1ce_trans_flair.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1_tra_flair = t1_trans_flair.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t2_tra_flair = t2_trans_flair.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                fusion_tra_flair = fusion_trans_flair.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                de_x5_flair = (flair_tra_flair, t1ce_tra_flair, t1_tra_flair, t2_tra_flair)
+                de_x1_flair, de_x2_flair, de_x3_flair, de_x4_flair, de_x5_flair = self.weight_attention(de_x1, de_x2, de_x3, de_x4, de_x5_flair, attn_flair)
+                de_x3_flair = torch.stack(de_x3_flair, dim=1)
+                de_x2_flair = torch.stack(de_x2_flair, dim=1)
+                de_x1_flair = torch.stack(de_x1_flair, dim=1)
+                fuse_pred_flair, preds_flair, de_f_flair = self.decoder_fusion(de_x1_flair, de_x2_flair, de_x3_flair, de_x4_flair, de_x5_flair, fusion_tra_flair, masks_mod0)
+                
+                ### Mod1-T1c-Path
+                flair_trans_t1ce, t1ce_trans_t1ce, t1_trans_t1ce, t2_trans_t1ce, fusion_trans_t1ce, attn_t1ce = self.Bottleneck(x_bottle, masks_mod1, fusion, self.pos)
+                flair_tra_t1ce = flair_trans_t1ce.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1ce_tra_t1ce = t1ce_trans_t1ce.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1_tra_t1ce = t1_trans_t1ce.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t2_tra_t1ce = t2_trans_t1ce.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                fusion_tra_t1ce = fusion_trans_t1ce.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                de_x5_t1ce = (flair_tra_t1ce, t1ce_tra_t1ce, t1_tra_t1ce, t2_tra_t1ce)
+                de_x1_t1ce, de_x2_t1ce, de_x3_t1ce, de_x4_t1ce, de_x5_t1ce = self.weight_attention(de_x1, de_x2, de_x3, de_x4, de_x5_t1ce, attn_t1ce)
+                de_x3_t1ce = torch.stack(de_x3_t1ce, dim=1)
+                de_x2_t1ce = torch.stack(de_x2_t1ce, dim=1)
+                de_x1_t1ce = torch.stack(de_x1_t1ce, dim=1)
+                fuse_pred_t1ce, preds_t1ce, de_f_t1ce = self.decoder_fusion(de_x1_t1ce, de_x2_t1ce, de_x3_t1ce, de_x4_t1ce, de_x5_t1ce, fusion_tra_t1ce, masks_mod1)
+                
+                ### Mod2-T1-Path
+                flair_trans_t1, t1ce_trans_t1, t1_trans_t1, t2_trans_t1, fusion_trans_t1, attn_t1 = self.Bottleneck(x_bottle, masks_mod2, fusion, self.pos)
+                flair_tra_t1 = flair_trans_t1.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1ce_tra_t1 = t1ce_trans_t1.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1_tra_t1 = t1_trans_t1.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t2_tra_t1 = t2_trans_t1.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                fusion_tra_t1 = fusion_trans_t1.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                de_x5_t1 = (flair_tra_t1, t1ce_tra_t1, t1_tra_t1, t2_tra_t1)
+                de_x1_t1, de_x2_t1, de_x3_t1, de_x4_t1, de_x5_t1 = self.weight_attention(de_x1, de_x2, de_x3, de_x4, de_x5_t1, attn_t1)
+                de_x3_t1 = torch.stack(de_x3_t1, dim=1)
+                de_x2_t1 = torch.stack(de_x2_t1, dim=1)
+                de_x1_t1 = torch.stack(de_x1_t1, dim=1)
+                fuse_pred_t1, preds_t1, de_f_t1 = self.decoder_fusion(de_x1_t1, de_x2_t1, de_x3_t1, de_x4_t1, de_x5_t1, fusion_tra_t1, masks_mod2)
+                
+                ### Mod3-T2-Path
+                flair_trans_t2, t1ce_trans_t2, t1_trans_t2, t2_trans_t2, fusion_trans_t2, attn_t2 = self.Bottleneck(x_bottle, masks_mod3, fusion, self.pos)
+                flair_tra_t2 = flair_trans_t2.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1ce_tra_t2 = t1ce_trans_t2.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t1_tra_t2 = t1_trans_t2.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                t2_tra_t2 = t2_trans_t2.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                fusion_tra_t2 = fusion_trans_t2.view(B, patch_size, patch_size, patch_size, basic_dims*16).permute(0, 4, 1, 2, 3).contiguous()
+                de_x5_t2 = (flair_tra_t2, t1ce_tra_t2, t1_tra_t2, t2_tra_t2)
+                de_x1_t2, de_x2_t2, de_x3_t2, de_x4_t2, de_x5_t2 = self.weight_attention(de_x1, de_x2, de_x3, de_x4, de_x5_t2, attn_t2)
+                de_x3_t2 = torch.stack(de_x3_t2, dim=1)
+                de_x2_t2 = torch.stack(de_x2_t2, dim=1)
+                de_x1_t2 = torch.stack(de_x1_t2, dim=1)
+                fuse_pred_t2, preds_t2, de_f_t2 = self.decoder_fusion(de_x1_t2, de_x2_t2, de_x3_t2, de_x4_t2, de_x5_t2, fusion_tra_t2, masks_mod3)
+
+                ###### Batch-Loss Computation            
+                sep_loss = torch.zeros(B,4).float().to(device)
+                prm_loss = torch.zeros(B,1).float().to(device)
+                kl_loss = torch.zeros(B,4).float().to(device)
+                proto_loss = torch.zeros(B,4).float().to(device)
+                dist = torch.zeros(B,4).float().to(device)
+
+                weight_prm = 1.0
+                for prm_pred, up_op in zip(preds, self.up_ops):
+                    weight_prm /= 2.0
+                    prm_loss += weight_prm * softmax_weighted_loss_bs(F.softmax(prm_pred, dim=1), target, num_cls=num_cls, up_op=up_op) \
+                    + weight_prm * dice_loss_bs(F.softmax(prm_pred, dim=1), target, num_cls=num_cls, up_op=up_op)
+                
+                if self.mask_type == 'pdt':
+                    ### Mod0-Flair-Path
+                    sep_loss += masks_mod0 * (softmax_weighted_loss_bs(flair_pred, target, num_cls=num_cls) + dice_loss_bs(flair_pred, target, num_cls=num_cls))
+                    proto_loss_mod0, dist_mod0 = prototype_passion_loss_bs(de_f_flair[0], de_f_avg[0].detach(), target, fuse_pred_flair, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += masks_mod0 * proto_loss_mod0
+                    dist += masks_mod0 * dist_mod0
+                    kl_loss += masks_mod0 * temp_kl_loss_bs(fuse_pred_flair, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_flair, up_op in zip(preds, preds_flair, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += masks_mod0 * weight_prm * temp_kl_loss_bs(prm_pred_flair, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                    ### Mod1-T1c-Path
+                    sep_loss += masks_mod1 * (softmax_weighted_loss_bs(t1ce_pred, target, num_cls=num_cls) + dice_loss_bs(t1ce_pred, target, num_cls=num_cls))
+                    proto_loss_mod1, dist_mod1 = prototype_passion_loss_bs(de_f_t1ce[0], de_f_avg[0].detach(), target, fuse_pred_t1ce, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += masks_mod1 * proto_loss_mod1
+                    dist += masks_mod1 * dist_mod1
+                    kl_loss += masks_mod1 * temp_kl_loss_bs(fuse_pred_t1ce, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_t1ce, up_op in zip(preds, preds_t1ce, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += masks_mod1 * weight_prm * temp_kl_loss_bs(prm_pred_t1ce, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                    ### Mod2-T1-Path
+                    sep_loss += masks_mod2 * (softmax_weighted_loss_bs(t1_pred, target, num_cls=num_cls) + dice_loss_bs(t1_pred, target, num_cls=num_cls))
+                    proto_loss_mod2, dist_mod2 = prototype_passion_loss_bs(de_f_t1[0], de_f_avg[0].detach(), target, fuse_pred_t1, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += masks_mod2 * proto_loss_mod2
+                    dist += masks_mod2 * dist_mod2
+                    kl_loss += masks_mod2 * temp_kl_loss_bs(fuse_pred_t1, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_t1, up_op in zip(preds, preds_t1, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += masks_mod2 * weight_prm * temp_kl_loss_bs(prm_pred_t1, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                    ### Mod3-T2-Path
+                    sep_loss += masks_mod3 * (softmax_weighted_loss_bs(t2_pred, target, num_cls=num_cls) + dice_loss_bs(t2_pred, target, num_cls=num_cls))
+                    proto_loss_mod3, dist_mod3 = prototype_passion_loss_bs(de_f_t2[0], de_f_avg[0].detach(), target, fuse_pred_t2, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += masks_mod3 * proto_loss_mod3
+                    dist += masks_mod3 * dist_mod3
+                    kl_loss += masks_mod3 * temp_kl_loss_bs(fuse_pred_t2, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_t2, up_op in zip(preds, preds_t2, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += masks_mod3 * weight_prm * temp_kl_loss_bs(prm_pred_t2, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+                else: ### idt or idt_moddrop
+                    ### Mod0-Flair-Path
+                    sep_loss += mask * masks_mod0 * (softmax_weighted_loss_bs(flair_pred, target, num_cls=num_cls) + dice_loss_bs(flair_pred, target, num_cls=num_cls))
+                    proto_loss_mod0, dist_mod0 = prototype_passion_loss_bs(de_f_flair[0], de_f_avg[0].detach(), target, fuse_pred_flair, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += mask * masks_mod0 * proto_loss_mod0
+                    dist += mask * masks_mod0 * dist_mod0
+                    kl_loss += mask * masks_mod0 * temp_kl_loss_bs(fuse_pred_flair, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_flair, up_op in zip(preds, preds_flair, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += mask * masks_mod0 * weight_prm * temp_kl_loss_bs(prm_pred_flair, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                    ### Mod1-T1c-Path
+                    sep_loss += mask * masks_mod1 * (softmax_weighted_loss_bs(t1ce_pred, target, num_cls=num_cls) + dice_loss_bs(t1ce_pred, target, num_cls=num_cls))
+                    proto_loss_mod1, dist_mod1 = prototype_passion_loss_bs(de_f_t1ce[0], de_f_avg[0].detach(), target, fuse_pred_t1ce, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += mask * masks_mod1 * proto_loss_mod1
+                    dist += mask * masks_mod1 * dist_mod1
+                    kl_loss += mask * masks_mod1 * temp_kl_loss_bs(fuse_pred_t1ce, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_t1ce, up_op in zip(preds, preds_t1ce, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += mask * masks_mod1 * weight_prm * temp_kl_loss_bs(prm_pred_t1ce, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                    ### Mod2-T1-Path
+                    sep_loss += mask * masks_mod2 * (softmax_weighted_loss_bs(t1_pred, target, num_cls=num_cls) + dice_loss_bs(t1_pred, target, num_cls=num_cls))
+                    proto_loss_mod2, dist_mod2 = prototype_passion_loss_bs(de_f_t1[0], de_f_avg[0].detach(), target, fuse_pred_t1, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += mask * masks_mod2 * proto_loss_mod2
+                    dist += mask * masks_mod2 * dist_mod2
+                    kl_loss += mask * masks_mod2 * temp_kl_loss_bs(fuse_pred_t1, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_t1, up_op in zip(preds, preds_t1, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += mask * masks_mod2 * weight_prm * temp_kl_loss_bs(prm_pred_t1, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                    ### Mod3-T2-Path
+                    sep_loss += mask * masks_mod3 * (softmax_weighted_loss_bs(t2_pred, target, num_cls=num_cls) + dice_loss_bs(t2_pred, target, num_cls=num_cls))
+                    proto_loss_mod3, dist_mod3 = prototype_passion_loss_bs(de_f_t2[0], de_f_avg[0].detach(), target, fuse_pred_t2, fuse_pred.detach(), num_cls=num_cls, temp=temp)
+                    proto_loss += mask * masks_mod3 * proto_loss_mod3
+                    dist += mask * masks_mod3 * dist_mod3
+                    kl_loss += mask * masks_mod3 * temp_kl_loss_bs(fuse_pred_t2, fuse_pred.detach(), target, num_cls=num_cls, temp=temp)
+                    weight_prm = 1.0
+                    for prm_pred, prm_pred_t2, up_op in zip(preds, preds_t2, self.up_ops):
+                        weight_prm /= 2.0
+                        kl_loss += mask * masks_mod3 * weight_prm * temp_kl_loss_bs(prm_pred_t2, prm_pred.detach(), target, num_cls=num_cls, temp=temp, up_op=up_op)
+
+                return F.softmax(fuse_pred, dim=1), prm_loss, sep_loss, kl_loss, proto_loss, dist
+            else: ### without passion
+                sep_loss = torch.zeros(B,4).float().to(device)
+                prm_loss = torch.zeros(B,1).float().to(device)
+
+                weight_prm = 1.0
+                for prm_pred, up_op in zip(preds, self.up_ops):
+                    weight_prm /= 2.0
+                    prm_loss += weight_prm * softmax_weighted_loss_bs(F.softmax(prm_pred, dim=1), target, num_cls=num_cls, up_op=up_op) \
+                    + weight_prm * dice_loss_bs(F.softmax(prm_pred, dim=1), target, num_cls=num_cls, up_op=up_op)
+
+                if self.mask_type == 'pdt':
+                    sep_loss += masks_mod0 * (softmax_weighted_loss_bs(flair_pred, target, num_cls=num_cls) + dice_loss_bs(flair_pred, target, num_cls=num_cls))
+                    sep_loss += masks_mod1 * (softmax_weighted_loss_bs(t1ce_pred, target, num_cls=num_cls) + dice_loss_bs(t1ce_pred, target, num_cls=num_cls))
+                    sep_loss += masks_mod2 * (softmax_weighted_loss_bs(t1_pred, target, num_cls=num_cls) + dice_loss_bs(t1_pred, target, num_cls=num_cls))
+                    sep_loss += masks_mod3 * (softmax_weighted_loss_bs(t2_pred, target, num_cls=num_cls) + dice_loss_bs(t2_pred, target, num_cls=num_cls))
+                else: ### idt or idt_moddrop
+                    sep_loss += mask * masks_mod0 * (softmax_weighted_loss_bs(flair_pred, target, num_cls=num_cls) + dice_loss_bs(flair_pred, target, num_cls=num_cls))
+                    sep_loss += mask * masks_mod1 * (softmax_weighted_loss_bs(t1ce_pred, target, num_cls=num_cls) + dice_loss_bs(t1ce_pred, target, num_cls=num_cls))
+                    sep_loss += mask * masks_mod2 * (softmax_weighted_loss_bs(t1_pred, target, num_cls=num_cls) + dice_loss_bs(t1_pred, target, num_cls=num_cls))
+                    sep_loss += mask * masks_mod3 * (softmax_weighted_loss_bs(t2_pred, target, num_cls=num_cls) + dice_loss_bs(t2_pred, target, num_cls=num_cls))
+
+                return F.softmax(fuse_pred, dim=1), prm_loss, sep_loss
+
+        return F.softmax(fuse_pred, dim=1)
