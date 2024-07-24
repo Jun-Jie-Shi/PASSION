@@ -6,7 +6,6 @@ def args_parser():
 
     parser.add_argument('--model', default='mmformer', type=str, help='model name')
     parser.add_argument('-batch_size', '--batch_size', default=1, type=int, help='Batch size')
-    #### For IDT settings, we simply used Batchsize=1, for larger batchsize, here we considered using 'for' loops
 
     parser.add_argument('--lr', default=2e-4, type=float, help='base learning rate')
     parser.add_argument('--weight_decay', default=1e-4, type=float)
