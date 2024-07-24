@@ -14,7 +14,7 @@
   * Unified the model implementation and the options of training settings;
   * Improved the part of multi-card and multi-batch parallel computation;
   * Fixed some bugs due to the late modification of models.
-  * If you find our Figure.2 in paper is garbled, try to switch the way you read it, e.g. Google Chrome, and we will change the figure from pdf to png format in the future.
+  * `Notes`: If you find our Figure. 2 in paper is garbled, try to switch the way you read it, e.g. Google Chrome, and we will change the figure from pdf to png format in the future.
 * **` Jul. 21th, 2024`:** Our work is further selected as an Oral presentation (3.97% in total 4385 submissions), [OpenReview](https://openreview.net/forum?id=jttrL7wHLC) is open to public.
 * **` Jul. 20th, 2024`:** We released our code and submitted our paper on [ArXiv](https://arxiv.org/abs/2407.14796).
 
