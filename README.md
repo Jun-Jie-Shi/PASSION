@@ -10,6 +10,7 @@
 
 
 ## 📅News
+* **` Jul. 25th, 2024`:** We made some refinements and optimizations to the code, including 1. Unified the setting options of training settings, 2. Improved the part of parallel computation of multi-batch and multi-card, 3. Fixed some bugs due to the late modification.
 * **` Jul. 21th, 2024`:** Our work is further selected as an Oral presentation (3.97% in total 4385 submissions), [OpenReview](https://openreview.net/forum?id=jttrL7wHLC) is open to public.
 * **` Jul. 20th, 2024`:** We released our code and submitted our paper on [ArXiv](https://arxiv.org/abs/2407.14796).
 
@@ -104,8 +105,6 @@ Before start training, you should check the options in `code/options.py`,  espec
 Our default relative datapath is according to our folder structure, if your datapath is different, just change `datarootPath` and `datasetPath` as your absolute data-saving root-path and dataset-saving path. 
 
 Other path setting like `imbmrpath` and `savepath` is also noteworthy.
-
-😭😭😭 We apologize for not fully implementing multi-batch parallel training, here we used 'for' loops but seems not memory-friendly, we will subsequently consider how to implement efficiently. If you have a better way, by all means contact me!
 
 ## 🚀Running
 You can conduct the experiment as following if everything is ready.
