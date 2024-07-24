@@ -22,6 +22,21 @@ def dice_loss(output, target, num_cls=5, eps=1e-7, up_op=None):
             dice += 2.0 * num / (l+r+eps)
     return 1.0 - 1.0 * dice / num_cls
 
+def dice_loss_bs(output, target, num_cls=5, eps=1e-7, up_op=None):
+    target = target.float()
+    if up_op:
+        output = up_op(output)
+    for i in range(num_cls):
+        num = torch.sum(output[:,i,:,:,:] * target[:,i,:,:,:], dim=(1,2,3))
+        l = torch.sum(output[:,i,:,:,:], dim=(1,2,3))
+        r = torch.sum(target[:,i,:,:,:], dim=(1,2,3))
+        if i == 0:
+            dice = 2.0 * num / (l+r+eps)
+        else:
+            dice += 2.0 * num / (l+r+eps)
+        dice_loss = (1.0 - 1.0 * dice / num_cls).unsqueeze(1)
+    return dice_loss
+
 def softmax_weighted_loss(output, target, num_cls=5, up_op=None):
     target = target.float()
     if up_op:
@@ -41,6 +56,25 @@ def softmax_weighted_loss(output, target, num_cls=5, up_op=None):
     cross_loss = torch.mean(cross_loss)
     return cross_loss
 
+def softmax_weighted_loss_bs(output, target, num_cls=5, up_op=None):
+    target = target.float()
+    if up_op:
+        output = up_op(output)
+    B, _, H, W, Z = output.size()
+    for i in range(num_cls):
+        outputi = output[:, i, :, :, :]
+        targeti = target[:, i, :, :, :]
+        weighted = 1.0 - (torch.sum(targeti, (1,2,3)) * 1.0 / torch.sum(target, (1,2,3,4)))
+        weighted = torch.reshape(weighted, (-1,1,1,1)).repeat(1,H,W,Z)
+        if i == 0:
+            cross_loss = -1.0 * weighted * targeti * torch.log(torch.clamp(outputi, min=0.005, max=1)).float()
+            # cross_loss = -1.0 * weighted * targeti * torch.log(outputi).float()
+        else:
+            # cross_loss += -1.0 * weighted * targeti * torch.log(outputi).float()
+            cross_loss += -1.0 * weighted * targeti * torch.log(torch.clamp(outputi, min=0.005, max=1)).float()
+    cross_loss = torch.mean(cross_loss, dim=(1,2,3)).unsqueeze(1)
+    return cross_loss
+
 
 def temp_kl_loss(logit_s, logit_t, target, num_cls=5, temp=1.0, up_op=None):
     pred_s = F.softmax(logit_s/temp, dim=1)
@@ -53,6 +87,19 @@ def temp_kl_loss(logit_s, logit_t, target, num_cls=5, temp=1.0, up_op=None):
     pred_s = torch.log(pred_s)
     kl_loss = temp * temp * torch.mul(pred_t, torch.log(pred_t)-pred_s)
     kl_loss = torch.mean(kl_loss)
+    return kl_loss
+
+def temp_kl_loss_bs(logit_s, logit_t, target, num_cls=5, temp=1.0, up_op=None):
+    pred_s = F.softmax(logit_s/temp, dim=1)
+    pred_t = F.softmax(logit_t/temp, dim=1)
+    if up_op:
+        pred_s = up_op(pred_s)
+        pred_t = up_op(pred_t)
+    pred_s = torch.clamp(pred_s, min=0.005, max=1)
+    pred_t = torch.clamp(pred_t, min=0.005, max=1)
+    pred_s = torch.log(pred_s)
+    kl_loss = temp * temp * torch.mul(pred_t, torch.log(pred_t)-pred_s)
+    kl_loss = torch.mean(kl_loss, dim=(1,2,3,4)).unsqueeze(1)
     return kl_loss
 
 
@@ -91,6 +138,44 @@ def prototype_passion_loss(feature_s, feature_t, target, logit_s, logit_t, num_c
     proto_loss = torch.mean((sim_map_s-sim_map_t)**2)
 
     dist = torch.mean(torch.sqrt((sim_map_s-sim_map_t)**2))
+
+    return proto_loss, dist
+
+def prototype_passion_loss_bs(feature_s, feature_t, target, logit_s, logit_t, num_cls=5, temp=1.0, up_op=None):
+    target = target.float()
+    eps = 1e-5
+    N = len(feature_s.size()) - 2
+    s = []
+    t = []
+    st = []
+    logit_ss = []
+    logit_tt = []
+    proto_fs = torch.zeros_like(feature_s).cuda().float()
+
+    for i in range(num_cls):
+        targeti = target[:, i, :, :, :]
+        if (torch.sum(targeti,dim=(-3,-2,-1))>0).all():
+            proto_s =  torch.sum(feature_s*targeti[:,None],dim=(-3,-2,-1))/(torch.sum(targeti[:,None],dim=(-3,-2,-1))+eps)
+            proto_t =  torch.sum(feature_t*targeti[:,None],dim=(-3,-2,-1))/(torch.sum(targeti[:,None],dim=(-3,-2,-1))+eps)
+            proto_fs += proto_s[:,:,None,None,None] * targeti[:,None]
+            proto_map_s = F.cosine_similarity(feature_s,proto_s[:,:,None,None,None],dim=1,eps=eps)
+            proto_map_t = F.cosine_similarity(feature_t,proto_t[:,:,None,None,None],dim=1,eps=eps)
+            s.append(proto_map_s.unsqueeze(1))
+            t.append(proto_map_t.unsqueeze(1))
+            logit_ss.append(logit_s[:, i, :, :, :].unsqueeze(1))
+            logit_tt.append(logit_t[:, i, :, :, :].unsqueeze(1))
+
+    for i in range(num_cls):
+        targeti = target[:, i, :, :, :]
+        if (torch.sum(targeti,dim=(-3,-2,-1))>0).all():
+            proto_t =  torch.sum(feature_t*targeti[:,None],dim=(-3,-2,-1))/(torch.sum(targeti[:,None],dim=(-3,-2,-1))+eps)
+            proto_map_st = F.cosine_similarity(proto_fs,proto_t[:,:,None,None,None],dim=1,eps=eps)
+            st.append(proto_map_st.unsqueeze(1))
+    sim_map_s = torch.cat(s,dim=1)
+    sim_map_t = torch.cat(t,dim=1)
+    proto_loss = torch.mean((sim_map_s-sim_map_t)**2, dim=(1,2,3,4)).unsqueeze(1)
+
+    dist = torch.mean(torch.sqrt((sim_map_s-sim_map_t)**2), dim=(1,2,3,4)).unsqueeze(1)
 
     return proto_loss, dist
 
