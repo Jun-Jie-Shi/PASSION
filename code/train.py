@@ -17,7 +17,7 @@ from data.data_utils import init_fn
 from data.datasets_nii import (Brats_loadall_train_nii_pdt, Brats_loadall_test_nii,
                                Brats_loadall_val_nii, Brats_loadall_train_nii_idt)
 from data.transforms import *
-from models import rfnet, mmformer, m2ftrans, rfnet_passion, mmformer_passion, m2ftrans_passion
+from models import rfnet, mmformer, m2ftrans
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from options import args_parser
@@ -79,24 +79,17 @@ def main():
         print ('dataset is error')
         exit(0)
 
-    if args.use_passion:
-        if args.model == 'm2ftrans':
-            model = m2ftrans_passion.Model(num_cls=num_cls)
-        elif args.model == 'rfnet':
-            model = rfnet_passion.Model(num_cls=num_cls)
-        elif args.model == 'mmformer':
-            model = mmformer_passion.Model(num_cls=num_cls)
-    else:
-        if args.model == 'm2ftrans':
-            model = m2ftrans.Model(num_cls=num_cls)
-        elif args.model == 'rfnet':
-            model = rfnet.Model(num_cls=num_cls)
-        elif args.model == 'mmformer':
-            model = mmformer.Model(num_cls=num_cls)
+    if args.model == 'mmformer':
+        model = mmformer.Model(num_cls=num_cls)
+    elif args.model == 'rfnet':
+        model = rfnet.Model(num_cls=num_cls)
+    elif args.model == 'm2ftrans':
+        model = m2ftrans.Model(num_cls=num_cls)
 
     print (model)
     model = torch.nn.DataParallel(model).cuda()
     model.module.mask_type = args.mask_type
+    model.module.use_passion = args.use_passion
     ##########Setting learning schedule and optimizer
     lr_schedule = LR_Scheduler(args.lr, args.num_epochs)
     train_params = [{'params': model.parameters(), 'lr': args.lr, 'weight_decay':args.weight_decay}]
@@ -166,22 +159,26 @@ def main():
     iter_per_epoch = len(train_loader)
     train_iter = iter(train_loader)
 
-    if args.use_passion:
-        logging.info('#############PASSION-IDT-Training############')
-        imb_mr_csv_data = pd.read_csv(train_file)
-        modal_num = torch.tensor((0,0,0,0), requires_grad=False).cuda().float()
-        for sample_mask in imb_mr_csv_data['mask']:
-            modal_num += torch.tensor(eval(sample_mask), requires_grad=False).cuda().float()
-        if args.mask_type == 'idt':
-            logging.info('Training Imperfect Datasets with Mod.Flair-{:d}, Mod.T1c-{:d}, Mod.T1-{:d}, Mod.T2-{:d}'\
-            .format(int(modal_num[0].item()), int(modal_num[1].item()), int(modal_num[2].item()), int(modal_num[3].item())))
+    ### IDT Init-Imb-Weight Setting
+    imb_mr_csv_data = pd.read_csv(train_file)
+    modal_num = torch.tensor((0,0,0,0), requires_grad=False).cuda().float()
+    for sample_mask in imb_mr_csv_data['mask']:
+        modal_num += torch.tensor(eval(sample_mask), requires_grad=False).cuda().float()        
+    logging.info('Training Imperfect Datasets with Mod.Flair-{:d}, Mod.T1c-{:d}, Mod.T1-{:d}, Mod.T2-{:d}'\
+    .format(int(modal_num[0].item()), int(modal_num[1].item()), int(modal_num[2].item()), int(modal_num[3].item())))
+    
+    modal_weight = torch.tensor((1,1,1,1), requires_grad=False).cuda().float()
+    modal_weight = (iter_per_epoch/modal_num).cuda().float()
+    # valid_iter = iter(valid_loader)
+    imb_beta = torch.tensor((1,1,1,1), requires_grad=False).cuda().float()
+    eta = 0.01
+    eta_ext = 1.5
 
-        modal_weight = torch.tensor((1,1,1,1), requires_grad=False).cuda().float()
-        modal_weight = (iter_per_epoch/modal_num).cuda().float()
-        # valid_iter = iter(valid_loader)
-        imb_beta = torch.tensor((1,1,1,1), requires_grad=False).cuda().float()
-        eta = 0.01
-        eta_ext = 1.5
+    if args.use_passion:
+        if args.mask_type == 'pdt':
+            logging.info('#############PASSION-PDT-Training############')
+        elif args.mask_type == 'idt':
+            logging.info('#############PASSION-IDT-Training############')
         for epoch in range(args.num_epochs):
             step_lr = lr_schedule(optimizer, epoch)
             writer.add_scalar('lr', step_lr, global_step=(epoch+1))
@@ -219,52 +216,30 @@ def main():
                 proto_loss_m = torch.zeros(4).cuda().float()
                 dist_m = torch.zeros(4).cuda().float()
                 prm_loss = torch.zeros(1).cuda().float()
-                fuse_loss = torch.zeros(1).cuda().float()
+                # fuse_loss = torch.zeros(1).cuda().float()
                 rp_iter = torch.zeros(4).cuda().float()
-                #### For IDT settings, we simply used Batchsize=1, for larger batchsize, here we considered using 'for' loops
-                #### TODO: Multi-batchsize Parallel Computing Implementation
-                for bs in range(args.batch_size):
-                    x_bs = x[bs:bs+1]
-                    mask_bs = mask[bs:bs+1]
-                    target_bs = target[bs:bs+1]
-                    # fuse_pred, (prm_cross_loss, prm_dice_loss), (sep_cross_loss, sep_dice_loss), kl_loss_m_bs, proto_loss_m_bs, dist_m_bs = model(x_bs, mask_bs, target=target_bs, temp=temp)
-                    fuse_pred, prm_loss_bs, sep_loss_m_bs, kl_loss_m_bs, proto_loss_m_bs, dist_m_bs = model(x_bs, mask_bs, target=target_bs, temp=temp)
 
-                    ###Loss compute
-                    fuse_cross_loss = criterions.softmax_weighted_loss(fuse_pred, target, num_cls=num_cls)
-                    fuse_dice_loss = criterions.dice_loss(fuse_pred, target, num_cls=num_cls)
-                    fuse_loss += fuse_cross_loss + fuse_dice_loss
+                fuse_pred, prm_loss_bs, sep_loss_m_bs, kl_loss_m_bs, proto_loss_m_bs, dist_m_bs = model(x, mask, target=target, temp=temp)
 
-                    prm_loss += prm_loss_bs
-                    sep_loss_m += sep_loss_m_bs
+                ###Loss compute
+                # fuse_cross_loss = criterions.softmax_weighted_loss(fuse_pred, target, num_cls=num_cls)
+                # fuse_dice_loss = criterions.dice_loss(fuse_pred, target, num_cls=num_cls)
+                # fuse_loss += fuse_cross_loss + fuse_dice_loss
+                fuse_loss_bs = criterions.softmax_weighted_loss_bs(fuse_pred, target, num_cls=num_cls) + criterions.dice_loss_bs(fuse_pred, target, num_cls=num_cls)
+                fuse_loss = torch.sum(fuse_loss_bs)
 
-                    dist_avg_bs = sum(dist_m_bs)/sum(mask[0])
+                prm_loss = torch.sum(prm_loss_bs)
+                
+                if args.mask_type == 'pdt':
+                    sep_loss_m = torch.sum(sep_loss_m_bs, dim=0)
+                    kl_loss_m = torch.sum(kl_loss_m_bs, dim=0)
+                    proto_loss_m = torch.sum(proto_loss_m_bs, dim=0)
+                    dist_m = torch.sum(dist_m_bs, dim=0)
 
-                    rp_iter += mask[bs]*(dist_m_bs/dist_avg_bs-1)
-
-                    kl_loss_m += kl_loss_m_bs
-                    proto_loss_m += proto_loss_m_bs
-                    dist_m += dist_m_bs
-
-                rp_mask = rp_iter > 0
-
-                if args.mask_type == 'idt':
-                    kl_loss = (imb_beta * modal_weight * kl_loss_m).sum()
-                    proto_loss = (rp_mask * modal_weight * proto_loss_m).sum()
-                    # dist_loss = (rp_mask * imb_beta * modal_weight * dist_m).sum()
-
-                    ## warmup with shared sep-decoder like rfnet
-                    if epoch < args.region_fusion_start_epoch:
-                        sep_loss = (imb_beta * modal_weight * sep_loss_m).sum()
-                        loss = fuse_loss * 0.0 + sep_loss + prm_loss * 0.0 + kl_loss * 0.0 + proto_loss * 0.0
-                    else:
-                        sep_loss = (rp_mask * imb_beta * modal_weight * sep_loss_m).sum()
-                        loss = fuse_loss + sep_loss + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
-
-                # ## without warmup and without shared sep-decoder
-                # sep_loss = (rp_mask * imb_beta * modal_weight * sep_loss_m).sum()
-                # loss = fuse_loss + sep_loss * 0.0 + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
-                else:
+                    for bs in range(x.size(0)):
+                        dist_avg_bs = torch.mean(dist_m_bs[bs])
+                        rp_iter += (dist_m_bs[bs]/dist_avg_bs-1)
+                    rp_mask = rp_iter > 0
                     kl_loss = (imb_beta * kl_loss_m).sum()
                     proto_loss = (rp_mask * proto_loss_m).sum()
                     # dist_loss = (rp_mask * imb_beta * dist_m).sum()
@@ -280,6 +255,33 @@ def main():
                     # ## without warmup and without shared sep-decoder
                     # sep_loss = (rp_mask * imb_beta * sep_loss_m).sum()
                     # loss = fuse_loss + sep_loss * 0.0 + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
+                else: ### idt or idt_moddrop
+                    # masks_sum = torch.clamp(torch.sum(mask, dim=0).float(), min=0.005, max=args.batch_size)
+                    sep_loss_m = torch.sum(sep_loss_m_bs*mask, dim=0)
+                    kl_loss_m = torch.sum(kl_loss_m_bs*mask, dim=0)
+                    proto_loss_m = torch.sum(proto_loss_m_bs*mask, dim=0)
+                    dist_m = torch.sum(dist_m_bs*mask, dim=0)
+
+                    for bs in range(x.size(0)):
+                        dist_avg_bs = sum(dist_m_bs[bs])/sum(mask[bs])
+                        rp_iter += mask[bs]*(dist_m_bs[bs]/dist_avg_bs-1)
+                    rp_mask = rp_iter > 0
+
+                    kl_loss = (imb_beta * modal_weight * kl_loss_m).sum()
+                    proto_loss = (rp_mask * modal_weight * proto_loss_m).sum()
+                    # dist_loss = (rp_mask * imb_beta * modal_weight * dist_m).sum()
+
+                    ## warmup with shared sep-decoder like rfnet
+                    if epoch < args.region_fusion_start_epoch:
+                        sep_loss = (imb_beta * modal_weight * sep_loss_m).sum()
+                        loss = fuse_loss * 0.0 + sep_loss + prm_loss * 0.0 + kl_loss * 0.0 + proto_loss * 0.0
+                    else:
+                        sep_loss = (rp_mask * imb_beta * modal_weight * sep_loss_m).sum()
+                        loss = fuse_loss + sep_loss + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
+
+                # ## without warmup and without shared sep-decoder
+                # sep_loss = (rp_mask * imb_beta * modal_weight * sep_loss_m).sum()
+                # loss = fuse_loss + sep_loss * 0.0 + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
 
 
                 optimizer.zero_grad()
@@ -313,7 +315,8 @@ def main():
                 msg += 'kllist:[{:.4f},{:.4f},{:.4f},{:.4f}] '.format(kl_loss_m[0].item(), kl_loss_m[1].item(), kl_loss_m[2].item(), kl_loss_m[3].item())
                 msg += 'protolist:[{:.4f},{:.4f},{:.4f},{:.4f}] '.format(proto_loss_m[0].item(), proto_loss_m[1].item(), proto_loss_m[2].item(), proto_loss_m[3].item())
                 msg += 'distlist:[{:.4f},{:.4f},{:.4f},{:.4f}] '.format(dist_m[0].item(), dist_m[1].item(), dist_m[2].item(), dist_m[3].item())
-                msg += '{:>20}, '.format(name[0])
+                for bs_n in range(x.size(0)):
+                    msg += '{:>20}, '.format(name[bs_n])
                 msg += 'kl_w[{:.2f},{:.2f},{:.2f},{:.2f}] '.format(modal_weight[0].item(), modal_weight[1].item(), modal_weight[2].item(), modal_weight[3].item())
                 logging.info(msg)
             b_train = time.time()
@@ -369,7 +372,10 @@ def main():
                     },
                     file_name)
     else:
-        logging.info('#############NO-PASSION-Training############')
+        if args.mask_type == 'pdt':
+            logging.info('#############NO-PASSION-PDT-Training############')
+        else:
+            logging.info('#############NO-PASSION-IDT-Training############')
         for epoch in range(args.num_epochs):
             step_lr = lr_schedule(optimizer, epoch)
             writer.add_scalar('lr', step_lr, global_step=(epoch+1))
@@ -400,45 +406,42 @@ def main():
                 sep_loss_m = torch.zeros(4).cuda().float()
                 prm_loss = torch.zeros(1).cuda().float()
                 fuse_loss = torch.zeros(1).cuda().float()
-                print(x.size())
-                if args.mask_type == 'idt':
-                    for bs in range(args.batch_size):
-                        x_bs = x[bs:bs+1]
-                        mask_bs = mask[bs:bs+1]
-                        target_bs = target[bs:bs+1]
 
-                        fuse_pred_bs, sep_preds_bs, prm_preds_bs = model(x_bs, mask_bs)
+                fuse_pred, prm_loss_bs, sep_loss_m_bs = model(x, mask, target=target, temp=temp)
 
-                        ###Loss compute
-                        fuse_cross_loss = criterions.softmax_weighted_loss(fuse_pred_bs, target_bs, num_cls=num_cls)
-                        fuse_dice_loss = criterions.dice_loss(fuse_pred_bs, target_bs, num_cls=num_cls)
-                        fuse_loss += fuse_cross_loss + fuse_dice_loss
-                        for j, sep_pred in enumerate(sep_preds_bs):
-                            if mask[bs,j]:
-                                sep_loss_m[j] += criterions.softmax_weighted_loss(sep_pred, target_bs, num_cls=num_cls) + criterions.dice_loss(sep_pred, target_bs, num_cls=num_cls)
-                        weight_prm = 1.0
-                        for prm_pred in prm_preds_bs:
-                            weight_prm /= 2.0
-                            prm_loss += weight_prm * (criterions.softmax_weighted_loss(prm_pred, target_bs, num_cls=num_cls) + criterions.dice_loss(prm_pred, target_bs, num_cls=num_cls))
-                else:
-                    fuse_pred, sep_preds, prm_preds = model(x, mask)
+                ###Loss compute
+                fuse_loss_bs = criterions.softmax_weighted_loss_bs(fuse_pred, target, num_cls=num_cls) + criterions.dice_loss_bs(fuse_pred, target, num_cls=num_cls)
+                fuse_loss = torch.sum(fuse_loss_bs)
 
-                    ###Loss compute
-                    fuse_cross_loss = criterions.softmax_weighted_loss(fuse_pred, target, num_cls=num_cls)
-                    fuse_dice_loss = criterions.dice_loss(fuse_pred, target, num_cls=num_cls)
-                    fuse_loss += fuse_cross_loss + fuse_dice_loss
-                    for j, sep_pred in enumerate(sep_preds):
-                        sep_loss_m[j] += criterions.softmax_weighted_loss(sep_pred, target, num_cls=num_cls) + criterions.dice_loss(sep_pred, target, num_cls=num_cls)
-                    weight_prm = 1.0
-                    for prm_pred in prm_preds:
-                        weight_prm /= 2.0
-                        prm_loss += weight_prm * (criterions.softmax_weighted_loss(prm_pred, target, num_cls=num_cls) + criterions.dice_loss(prm_pred, target, num_cls=num_cls))
-                sep_loss = sep_loss_m.sum()
+                prm_loss = torch.sum(prm_loss_bs)
 
-                if epoch < args.region_fusion_start_epoch:
-                    loss = fuse_loss * 0.0 + sep_loss + prm_loss * 0.0
-                else:
-                    loss = fuse_loss + sep_loss + prm_loss
+                if args.mask_type == 'pdt':
+                    sep_loss_m = torch.sum(sep_loss_m_bs, dim=0)
+                    sep_loss = sep_loss_m.sum()
+                    ## warmup with shared sep-decoder like rfnet
+                    if epoch < args.region_fusion_start_epoch:                        
+                        loss = fuse_loss * 0.0 + sep_loss + prm_loss * 0.0
+                    else:
+                        loss = fuse_loss + sep_loss + prm_loss
+
+                    # ## without warmup and without shared sep-decoder
+                    # sep_loss = (rp_mask * imb_beta * sep_loss_m).sum()
+                    # loss = fuse_loss + sep_loss * 0.0 + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
+                else: ### idt or idt_moddrop
+                    # masks_sum = torch.clamp(torch.sum(mask, dim=0).float(), min=0.005, max=args.batch_size)
+                    sep_loss_m = torch.sum(sep_loss_m_bs*mask, dim=0)
+                    sep_loss = sep_loss_m.sum()
+                    # sep_loss = (modal_weight * sep_loss_m).sum()
+
+                    ## warmup with shared sep-decoder like rfnet
+                    if epoch < args.region_fusion_start_epoch:
+                        loss = fuse_loss * 0.0 + sep_loss + prm_loss * 0.0
+                    else:
+                        loss = fuse_loss + sep_loss + prm_loss
+
+                # ## without warmup and without shared sep-decoder
+                # sep_loss = (rp_mask * imb_beta * modal_weight * sep_loss_m).sum()
+                # loss = fuse_loss + sep_loss * 0.0 + prm_loss + kl_loss * 0.5 + proto_loss * 0.1
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -449,7 +452,10 @@ def main():
                 epoch_prm_losses += (prm_loss/iter_per_epoch).detach().cpu()
                 epoch_sep_losses += (sep_loss/iter_per_epoch).detach().cpu()
 
-                epoch_sep_m += (sep_loss_m/iter_per_epoch).detach().cpu()
+                if args.mask_type == 'idt':
+                    epoch_sep_m += (sep_loss_m/modal_num).detach().cpu()
+                else:
+                    epoch_sep_m += (sep_loss_m/iter_per_epoch).detach().cpu()
 
 
                 msg = 'Epoch {}/{}, Iter {}/{}, Loss {:.4f}, '.format((epoch+1), args.num_epochs, (i+1), iter_per_epoch, loss.item())
