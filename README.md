@@ -72,7 +72,15 @@ PASSION/
 ├── datasets
 │   ├── BraTS
 │   │   ├── BRATS2020_Training_Data
+│   │   │   ├── BraTS20_Training_001
+│   │   │   │   ├── BraTS20_Training_001_flair.nii.gz
+│   │   │   │   ├── BraTS20_Training_001_seg.nii.gz
+│   │   │   │   ├── BraTS20_Training_001_t1.nii.gz
+│   │   │   │   ├── BraTS20_Training_001_t1ce.nii.gz
+│   │   │   │   ├── BraTS20_Training_001_t2.nii.gz
 │   │   │   ├── ...
+│   │   │   ├── BraTS20_Training_369
+│   │   │   │   ├── ...
 ├── code
 │   ├── ...
 └── ...
