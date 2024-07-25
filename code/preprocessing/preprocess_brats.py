@@ -59,6 +59,10 @@ if not os.path.exists(os.path.join(tar_path, 'seg')):
 
 for file_name in name_list:
     print (file_name)
+    ### BraTS2020 Rename in RFNet
+    num = file_name.split('_')[2]
+    HLG = 'HG_' if int(num) <= 259 or int(num) >= 336 else 'LG_'
+
     flair, flair_header = medio.load(os.path.join(src_path, file_name, file_name+'_flair.nii.gz'))
     t1ce, t1ce_header = medio.load(os.path.join(src_path, file_name, file_name+'_t1ce.nii.gz'))
     t1, t1_header = medio.load(os.path.join(src_path, file_name, file_name+'_t1.nii.gz'))
@@ -75,5 +79,9 @@ for file_name in name_list:
     seg1 = seg[x_min:x_max, y_min:y_max, z_min:z_max]
     seg1[seg1==4]=3
 
-    np.save(os.path.join(tar_path, 'vol', file_name+'_vol.npy'), vol1)
-    np.save(os.path.join(tar_path, 'seg', file_name+'_seg.npy'), seg1)
+    ### BraTS2020 Rename in RFNet
+    np.save(os.path.join(tar_path, 'vol', HLG+file_name+'_vol.npy'), vol1)
+    np.save(os.path.join(tar_path, 'seg', HLG+file_name+'_seg.npy'), seg1)
+    
+    # np.save(os.path.join(tar_path, 'vol', file_name+'_vol.npy'), vol1)
+    # np.save(os.path.join(tar_path, 'seg', file_name+'_seg.npy'), seg1)
