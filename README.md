@@ -148,4 +148,4 @@ If you find PASSION is useful in your research or applications, welcome to cite 
 ```
 
 ## 📧Contact
-If you have any other questions, feel free to contact 'shijunjie@hust.edu.cn'.
+If you have any other questions, feel free to reach me at 'shijunjie@hust.edu.cn'.
