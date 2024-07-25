@@ -62,7 +62,7 @@ You can download the preprocessed dataset (e.g. BraTS2020) from [RFNet](https://
 The data-split is available in the `datasets/BraTS/BRATS2020_Training_none_npy` folder, and our imbalanced missing rates data-split is available in the `datasets/BraTS/brats_split` folder.
 
 ### How to preprocess by yourself
-If you want to preprocess by yourself, the preprocessing code `code/preprocessing/preprocess_brats.py` is also provided, just download `BRATS2020_Training_Data` in `datasets/BraTS` folder. (Here `BRATS2020_Training_Data` may refer to `BRATS2020_Training_Data/MICCAI_BRATS2020_Training_Data` in you download in [kaggle](https://www.kaggle.com/datasets/awsaf49/brats20-dataset-training-validation).)
+If you want to preprocess by yourself, the preprocessing code `code/preprocessing/preprocess_brats.py` is also provided, just download `BRATS2020_Training_Data` in `datasets/BraTS` folder. (Here our default path `BRATS2020_Training_Data` may refer to `BRATS2020_Training_Data/MICCAI_BRATS2020_Training_Data` if you download in [kaggle](https://www.kaggle.com/datasets/awsaf49/brats20-dataset-training-validation).)
 
 And if you want to divide data by yourself, `data_split.py` and `generate_imb_mr.py` in the `code/preprocessing` folder is available. (Here we only provide the preprocessing for BraTS, if you want to use other datasets, just do it similarly)
 
