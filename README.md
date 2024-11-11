@@ -5,7 +5,7 @@
 [Junjie Shi](https://github.com/Jun-Jie-Shi)<sup>1</sup> ,[Caozhi Shang](https://github.com/Shangcz1015)<sup>1</sup> ,[Zhaobin Sun](https://github.com/szbonaldo)<sup>1</sup> ,[Li Yu](https://eic.hust.edu.cn/professor/yuli/)<sup>1</sup> ,[Xin Yang](https://sites.google.com/view/xinyang/home)<sup>1</sup> ,[Zengqiang Yan](https://mia2i.github.io/home/)<sup>1 :email:</sup>
 
 🏢 <sup>1</sup> Huazhong University of Science and Technology,  (<sup>:email:</sup>) corresponding author.
-<br> 🧐  [ArXivPreprint](https://arxiv.org/abs/2407.14796) | [OpenReview](https://openreview.net/forum?id=jttrL7wHLC)
+<br> 🧐  [ArXivPreprint](https://arxiv.org/abs/2407.14796) | [OpenReview](https://openreview.net/forum?id=jttrL7wHLC) | [ACMDL](https://dl.acm.org/doi/abs/10.1145/3664647.3681543)
 </div>
 
 
@@ -139,10 +139,11 @@ The implementation is based on the repos: [RFNet](https://github.com/dyh127/RFNe
 ## ✨Citation
 If you find PASSION is useful in your research or applications, welcome to cite our paper and give us a star 🌟.
 ```bibtex
- @article{passion,
+@inproceedings{shi2024passion,
   title={PASSION: Towards Effective Incomplete Multi-Modal Medical Image Segmentation with Imbalanced Missing Rates},
   author={Junjie Shi and Caozhi Shang and Zhaobin Sun and Li Yu and Xin Yang and Zengqiang Yan},
-  journal={arXiv preprint arXiv:2407.14796},
+  booktitle={Proceedings of the 32nd ACM International Conference on Multimedia},
+  pages={456--465},
   year={2024}
 }
 ```
