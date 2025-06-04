@@ -6,6 +6,7 @@
 
 🏢 <sup>1</sup> Huazhong University of Science and Technology,  (<sup>:email:</sup>) corresponding author.
 <br> 🧐  [ArXivPreprint](https://arxiv.org/abs/2407.14796) | [OpenReview](https://openreview.net/forum?id=jttrL7wHLC) | [ACM Digital Library](https://dl.acm.org/doi/abs/10.1145/3664647.3681543)
+
 🏅 Student Travel Award
 </div>
 
